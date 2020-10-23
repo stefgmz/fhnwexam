@@ -1,0 +1,206 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{fhnwexam}[2020/10/18 fhnwexam]
+
+\RequirePackage{graphicx}
+\RequirePackage{eso-pic}
+
+\RequirePackage{xkeyval}
+\RequirePackage{ifthen}
+
+\RequirePackage{substr}
+
+\RequirePackage{totcount}
+
+\usepackage{helvet}
+\usepackage{raleway}
+\renewcommand{\familydefault}{\rmdefault}
+
+%%%%%%%%%%%%%%%%%%%% Set some lengths %%%%%%%%%%%%%%%%%%%%
+\newlength{\FHNW@margin}
+\setlength{\FHNW@margin}{24.2mm}
+\newlength{\FHNW@top@margin}
+\setlength{\FHNW@top@margin}{35mm}
+
+\newlength{\@FHNW@below@headskip}
+\setlength{\@FHNW@below@headskip}{5mm}
+
+\RequirePackage[dvips]{geometry}
+\PassOptionsToPackage{paper=a4paper}{geometry}
+\geometry{margin=\FHNW@margin,top=\FHNW@top@margin,bottom=3cm}
+
+\RequirePackage{fancyhdr}
+\RequirePackage{lastpage}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize Seite \thepage/\pageref{LastPage}}
+
+\def\FHNW@logo{fhnw_habg_10mm.pdf}
+
+% Logo top left of each page
+\AtBeginDocument{%
+  \AddToShipoutPicture{%
+    \AtPageUpperLeft{\parbox{\paperwidth}{\vspace*{27mm}\hspace*{17.2mm}\includegraphics{\FHNW@logo}}}%
+	   }%
+}
+
+% Rules for the exam
+\global\let\maketitle\relax
+\newcommand\fairplay[1]{\renewcommand\@fairplay{#1}}
+\newcommand\@fairplay{%
+	\PackageError{fhnwreprt}{No \noexpand\fairplay given.}{%
+	Please add \noexpand\fairplay to your document/preamble.}%
+}
+
+% Create titlepage
+\newcommand*\maketitle[1][1]{%
+	\begin{titlepage}
+		\setlength{\parindent}{0pt}%
+		\setcounter{page}{%
+			#1%
+		}%
+		{\usekomafont{title}{\noindent\huge \@title\par}}%
+		\vskip 1em
+		{\ifx\@subtitle\@empty\else\usekomafont{subtitle}{\@subtitle\par}\fi}%
+		\vskip 2em
+		{%
+		 \usekomafont{subsection}{%
+			\lineskip 0.75em
+			  \@author
+			\par
+		 }%
+		}%
+		\vskip 1.5em
+		{\usekomafont{subsection}{\@date \par}}%
+		\vskip 1.5cm
+		{
+				\begin{center}
+					{\Large Pers\"onliche Daten}
+				\end{center}
+
+				\vspace{.01\linewidth}
+
+				\begin{personaldata}
+				  \namefield{Name}
+				  \namefield{Vorname}
+				\end{personaldata}
+
+				\vspace{.01\linewidth}
+
+				\gradingtable
+		}
+		\vskip 1.5em
+		{{\@fairplay \par}}%
+	\end{titlepage}
+}
+
+
+%%%%%%%%%%%%%%%%% Exam stuff %%%%%%%%%%%%%%%%%%%%%%%
+
+\newenvironment{personaldata}{
+    \newcommand{\namefield}[1]{
+      \noindent ##1: \dotfill
+	 	\\[0.5cm]
+	 }
+  }
+
+
+% rule over and under the head of each exercise/question
+\newcommand{\exheadrule}[1][\textwidth]{\rule{#1}{.5pt}}
+\newcommand{\subheadlinesize}{\fontsize{10.5}{14.7}\selectfont}
+
+\newcommand{\pointsref}[2]{%
+	\protected@write \@auxout {}{\string \newlabel {#1}{{#2}{}}}}
+
+\RequirePackage{multirow}
+\newcommand{\gradingtable}{
+	\newcounter{count}
+	\setcounter{count}{0}%
+	\def\exercisesnumbers{}%
+	\def\exercisespoints{}%
+	\def\emptyline{}%
+	\whiledo{\value{count}<\numexpr\totvalue{totalexercises}}{
+		\stepcounter{count}
+		\edef\exercisesnumbers{\exercisesnumbers & \thecount}
+		\edef\exercisespoints{\exercisespoints & \ref{exercise\thecount}}
+		\edef\emptyline{\emptyline & }
+	}%
+  \begin{center}
+	  %TODO include this only if totalexercises is not -1
+		\renewcommand{\arraystretch}{1.5}
+		\begin{tabular}{|l|*{\the\numexpr\totvalue{totalexercises}}{c|c|c|}}
+			\hline
+			Aufgabe
+			\exercisesnumbers
+			& $\sum$
+			& Note
+			\\\hline
+			Punkte
+			\exercisespoints
+			& \the\numexpr\totvalue{totalpoints}
+			&
+			\\\cline{1-\the\numexpr\totvalue{totalexercises}+2}
+			Erreichte Punkte
+			\emptyline
+			&
+			&
+			\\\hline
+		\end{tabular}%
+		\renewcommand{\arraystretch}{1}
+  \end{center}
+}
+
+\newtotcounter{totalpoints}
+\setcounter{totalpoints}{0}
+\newtotcounter{totalexercises}
+\setcounter{totalexercises}{0}
+
+\newenvironment{Example}[2][Example]
+    {This is an #1. You gave #2 as an argument. The rest will be bold: \bfseries}
+    {}
+
+%TODO Example environment above breaks exheadrule
+\newenvironment{aufgabe}[2][]{
+	\addtocounter{totalpoints}{#2}
+	\stepcounter{totalexercises}
+	\pointsref{exercise\thetotalexercises}{#2}
+	\par\bigskip
+	\noindent\parskip0pt\exheadrule\nopagebreak\vspace{0.05\baselineskip}
+			\noindent\sffamily{\thetotalexercises{}. Aufgabe
+			\ifthenelse{\equal{#1}{}}{%
+			}{(#1)}%
+			\hfill (#2 Punkte)}
+			\\[-0.4\baselineskip]
+			{\noindent\exheadrule\nopagebreak} %
+   		\vspace{\@FHNW@below@headskip}\normalsize\normalfont
+	    	\setcounter{equation}{0}%
+			\renewcommand{\labelenumi}{(\alph{enumi})}%
+			\renewcommand{\theenumi}{(\alph{enumi})}%
+			\renewcommand{\labelenumii}{\roman{enumii}.}%
+			\renewcommand{\theenumii}{\roman{enumii}.}%
+			\par\nobreak%
+			\@afterheading%
+}
+
+
+\newenvironment{mchoice}{
+  \newcommand*{\mchoicelabel}[1]{\hspace{\labelsep}\ifthenelse{\equal{##1}{}
+  }
+  {$\Box$}{$\Box$\hspace{-8.5pt}$\times$}}
+  \begin{list}{}{
+	\setlength{\itemsep}{0.5ex} 
+	\let\makelabel\mchoicelabel
+  }%
+    \begin{samepage}
+    }{
+    \end{samepage}
+  \end{list}
+  }
+
+%%% Unterdrueckt Hurenkinder und Schusterjungen %%%
+    \clubpenalty = 10000            % 10000 schlie"st Schusterjungen aus
+    \widowpenalty = 10000           % 10000 schlie"st Hurenkinder aus
+    \displaywidowpenalty = 10000    % f"ur Formeln
+%%% ENDE Unterdueckt Hurenkinder und Schusterjungen %%%
+
+\endinput

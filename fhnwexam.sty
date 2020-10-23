@@ -11,8 +11,8 @@
 
 \RequirePackage{totcount}
 
-\usepackage{helvet}
-\usepackage{raleway}
+\RequirePackage{helvet}
+\RequirePackage{raleway}
 \renewcommand{\familydefault}{\rmdefault}
 
 %%%%%%%%%%%%%%%%%%%% Set some lengths %%%%%%%%%%%%%%%%%%%%
@@ -197,10 +197,9 @@
   \end{list}
   }
 
-%%% Unterdrueckt Hurenkinder und Schusterjungen %%%
-    \clubpenalty = 10000            % 10000 schlie"st Schusterjungen aus
-    \widowpenalty = 10000           % 10000 schlie"st Hurenkinder aus
-    \displaywidowpenalty = 10000    % f"ur Formeln
-%%% ENDE Unterdueckt Hurenkinder und Schusterjungen %%%
+%%%%%%%%%%%%% Unterdrueckt Hurenkinder und Schusterjungen %%%%%%%%%%%%%
+\clubpenalty = 10000            % 10000 schliesst Schusterjungen aus
+\widowpenalty = 10000           % 10000 schliesst Hurenkinder aus
+\displaywidowpenalty = 10000    % fur Formeln
 
 \endinput
